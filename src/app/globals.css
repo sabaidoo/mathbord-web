@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --navy: #1F1F1F;
+  --navy-2: #212121;
+  --navy-3: #333333;
+  --sidebar-bg: #111111;
+  --teal: #06A5FF;
+  --teal-light: #62BEF1;
+  --teal-dark: #1863DC;
+  --teal-50: #E8F4FE;
+  --accent: #FD4044;
+  --accent-light: #FEE2E2;
+  --sidebar-w: 250px;
+  --header-h: 60px;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #F5F5F5;
+  color: #212121;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D0D5D2; border-radius: 3px; }

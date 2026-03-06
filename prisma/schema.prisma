@@ -1,0 +1,324 @@
+// ─── Mathbord Prisma Schema ───────────────────────────────────────────────────
+// SQLite variant for local development.
+// Production schema (PostgreSQL) is preserved in prisma/schema.postgres.prisma
+// To switch back: cp prisma/schema.postgres.prisma prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// NOTE: SQLite does not support native enums.
+// All enum types from the PostgreSQL schema are stored as String here.
+// Valid values are enforced at the application layer.
+//
+// Role:              admin | tutor | client | student
+// UserStatus:        active | inactive | prospect | suspended
+// JobStatus:         enquiry | active | paused | completed | cancelled
+// LessonStatus:      scheduled | completed | cancelled | no_show
+// AssessmentType:    diagnostic | quiz | assignment | test | practice_test | midterm | final
+// InvoiceStatus:     draft | sent | paid | overdue | cancelled
+// ApplicationStatus: pending | interview | approved | rejected
+// InviteStatus:      pending | accepted | expired
+
+// ─── 3.1 Users ────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  phone        String?
+  avatarUrl    String?  @map("avatar_url")
+  country      String?
+  status       String   @default("active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  lastLogin    DateTime? @map("last_login")
+
+  tutor        Tutor?
+  client       Client?
+  student      Student?
+
+  reviewedApplications Application[] @relation("ReviewedBy")
+
+  @@map("users")
+}
+
+// ─── 3.2 Tutors ───────────────────────────────────────────────────────────────
+// subjects and levels are stored as JSON arrays: e.g. '["Calculus","Algebra"]'
+
+model Tutor {
+  id         String  @id @default(uuid())
+  userId     String  @unique @map("user_id")
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  subjects   String  @default("[]")
+  levels     String  @default("[]")
+  hourlyRate Float   @map("hourly_rate")
+  payRate    Float   @map("pay_rate")
+  country    String?
+  city       String?
+  province   String?
+  degree     String?
+  bio        String?
+  rating     Float   @default(0)
+  totalHours Float   @default(0) @map("total_hours")
+
+  jobs        Job[]
+  lessons     Lesson[]
+  assessments Assessment[]
+  students    Student[]
+
+  @@map("tutors")
+}
+
+// ─── 3.3 Clients ──────────────────────────────────────────────────────────────
+
+model Client {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  country     String?
+  balance     Float    @default(0)
+  clientSince DateTime @map("client_since")
+
+  inviteId    String?  @map("invite_id")
+  invite      Invite?  @relation(fields: [inviteId], references: [id])
+
+  students Student[]
+  jobs     Job[]
+  invoices Invoice[]
+
+  @@map("clients")
+}
+
+// ─── 3.4 Students ─────────────────────────────────────────────────────────────
+
+model Student {
+  id         String    @id @default(uuid())
+
+  userId     String?   @unique @map("user_id")
+  user       User?     @relation(fields: [userId], references: [id])
+
+  clientId   String    @map("client_id")
+  client     Client    @relation(fields: [clientId], references: [id])
+
+  tutorId    String?   @map("tutor_id")
+  tutor      Tutor?    @relation(fields: [tutorId], references: [id])
+
+  firstName  String    @map("first_name")
+  lastName   String    @map("last_name")
+  grade      String?
+  curriculum String?
+  goals      String?
+  startDate  DateTime? @map("start_date")
+  status     String    @default("prospect")
+
+  jobs        Job[]
+  lessons     Lesson[]
+  assessments Assessment[]
+
+  @@map("students")
+}
+
+// ─── 3.5 Jobs (Tutoring Engagements) ─────────────────────────────────────────
+
+model Job {
+  id        String   @id @default(uuid())
+  title     String
+  subject   String?
+
+  studentId String   @map("student_id")
+  student   Student  @relation(fields: [studentId], references: [id])
+
+  clientId  String   @map("client_id")
+  client    Client   @relation(fields: [clientId], references: [id])
+
+  tutorId   String?  @map("tutor_id")
+  tutor     Tutor?   @relation(fields: [tutorId], references: [id])
+
+  rate      Float
+  status    String   @default("enquiry")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lessons          Lesson[]
+  assessments      Assessment[]
+  curriculumTopics CurriculumTopic[]
+
+  @@map("jobs")
+}
+
+// ─── 3.6 Lessons ──────────────────────────────────────────────────────────────
+
+model Lesson {
+  id              String   @id @default(uuid())
+
+  jobId           String   @map("job_id")
+  job             Job      @relation(fields: [jobId], references: [id])
+
+  tutorId         String   @map("tutor_id")
+  tutor           Tutor    @relation(fields: [tutorId], references: [id])
+
+  studentId       String   @map("student_id")
+  student         Student  @relation(fields: [studentId], references: [id])
+
+  date            DateTime
+  startTime       DateTime @map("start_time")
+
+  durationMinutes Int      @map("duration_minutes")
+
+  status          String   @default("scheduled")
+  lessonspaceUrl  String?  @map("lessonspace_url")
+  report          String?
+
+  createdById     String   @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("lessons")
+}
+
+// ─── 3.7 Assessments ──────────────────────────────────────────────────────────
+
+model Assessment {
+  id        String   @id @default(uuid())
+
+  studentId String   @map("student_id")
+  student   Student  @relation(fields: [studentId], references: [id])
+
+  jobId     String   @map("job_id")
+  job       Job      @relation(fields: [jobId], references: [id])
+
+  tutorId   String   @map("tutor_id")
+  tutor     Tutor    @relation(fields: [tutorId], references: [id])
+
+  topic     String
+  type      String
+
+  score     Float
+  maxScore  Float    @map("max_score")
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("assessments")
+}
+
+// ─── 3.8 Invoices ─────────────────────────────────────────────────────────────
+
+model Invoice {
+  id              String    @id @default(uuid())
+
+  clientId        String    @map("client_id")
+  client          Client    @relation(fields: [clientId], references: [id])
+
+  amount          Float
+  status          String    @default("draft")
+  issuedDate      DateTime  @map("issued_date")
+  dueDate         DateTime  @map("due_date")
+
+  stripeInvoiceId String?   @map("stripe_invoice_id")
+  paidAt          DateTime? @map("paid_at")
+
+  lineItems InvoiceLineItem[]
+
+  @@map("invoices")
+}
+
+// ─── 3.9 Invoice Line Items ───────────────────────────────────────────────────
+
+model InvoiceLineItem {
+  id          String  @id @default(uuid())
+
+  invoiceId   String  @map("invoice_id")
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  description String
+  amount      Float
+
+  @@map("invoice_line_items")
+}
+
+// ─── 3.10 Applications (Tutor) ────────────────────────────────────────────────
+// subjects stored as JSON array string: '["Calculus","Statistics"]'
+
+model Application {
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  phone      String?
+  country    String?
+  city       String?
+  degree     String?
+  subjects   String   @default("[]")
+  experience String?
+  approach   String?
+  source     String?
+  status     String   @default("pending")
+  appliedAt  DateTime @default(now()) @map("applied_at")
+
+  reviewedBy String?  @map("reviewed_by")
+  reviewer   User?    @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+
+  @@map("applications")
+}
+
+// ─── 3.11 Invites (Client) ────────────────────────────────────────────────────
+
+model Invite {
+  id           String    @id @default(uuid())
+  email        String
+  name         String
+  personalNote String?   @map("personal_note")
+
+  token        String    @unique
+
+  status       String    @default("pending")
+  sentAt       DateTime  @default(now()) @map("sent_at")
+  acceptedAt   DateTime? @map("accepted_at")
+  expiresAt    DateTime  @map("expires_at")
+
+  clients Client[]
+
+  @@map("invites")
+}
+
+// ─── 3.12 Curriculum Topics ───────────────────────────────────────────────────
+
+model CurriculumTopic {
+  id           String @id @default(uuid())
+
+  jobId        String @map("job_id")
+  job          Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  topicName    String @map("topic_name")
+  displayOrder Int    @map("display_order")
+
+  @@map("curriculum_topics")
+}
+
+// ─── 3.13 Consultations (from marketing site) ────────────────────────────────
+// subjects stored as JSON array string
+
+model Consultation {
+  id               String   @id @default(uuid())
+  firstName        String   @map("first_name")
+  lastName         String   @map("last_name")
+  email            String
+  phone            String?
+  province         String?
+  subjects         String   @default("[]")
+  gradeLevel       String?  @map("grade_level")
+  goals            String?
+  marketingConsent Boolean  @default(false) @map("marketing_consent")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("consultations")
+}

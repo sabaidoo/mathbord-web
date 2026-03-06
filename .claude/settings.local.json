@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(DATABASE_URL=\"file:./dev.db\" npx prisma:*)",
+      "Bash(DATABASE_URL=\"file:./dev.db\" npm run:*)",
+      "Bash(curl:*)",
+      "Bash(powershell:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)"
+    ]
+  }
+}

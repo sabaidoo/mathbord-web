@@ -1,0 +1,372 @@
+// ─── Mathbord Prisma Schema ───────────────────────────────────────────────────
+// 13 tables matching the data models in TECHNICAL_SPEC.md §3
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  admin
+  tutor
+  client
+  student
+}
+
+enum UserStatus {
+  active
+  inactive
+  prospect
+  suspended
+}
+
+enum JobStatus {
+  enquiry
+  active
+  paused
+  completed
+  cancelled
+}
+
+enum LessonStatus {
+  scheduled
+  completed
+  cancelled
+  no_show
+}
+
+enum AssessmentType {
+  diagnostic
+  quiz
+  assignment
+  test
+  practice_test
+  midterm
+  final
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  cancelled
+}
+
+enum ApplicationStatus {
+  pending
+  interview
+  approved
+  rejected
+}
+
+enum InviteStatus {
+  pending
+  accepted
+  expired
+}
+
+// ─── 3.1 Users ────────────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  role         Role
+  firstName    String     @map("first_name") @db.VarChar(100)
+  lastName     String     @map("last_name") @db.VarChar(100)
+  phone        String?    @db.VarChar(20)
+  avatarUrl    String?    @map("avatar_url") @db.VarChar(500)
+  status       UserStatus @default(active)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  lastLogin    DateTime?  @map("last_login")
+
+  // Profile relations (one-to-one)
+  tutor        Tutor?
+  client       Client?
+  student      Student?
+
+  // Admin reviewed applications
+  reviewedApplications Application[] @relation("ReviewedBy")
+
+  @@map("users")
+}
+
+// ─── 3.2 Tutors ───────────────────────────────────────────────────────────────
+
+model Tutor {
+  id         String  @id @default(uuid())
+  userId     String  @unique @map("user_id")
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  subjects   String[]
+  levels     String[]
+  hourlyRate Decimal  @map("hourly_rate") @db.Decimal(8, 2)
+  payRate    Decimal  @map("pay_rate") @db.Decimal(8, 2)
+  city       String?  @db.VarChar(100)
+  province   String?  @db.VarChar(50)
+  degree     String?
+  bio        String?
+  rating     Decimal  @default(0) @db.Decimal(3, 2)
+  totalHours Decimal  @default(0) @map("total_hours") @db.Decimal(10, 2)
+
+  jobs        Job[]
+  lessons     Lesson[]
+  assessments Assessment[]
+  students    Student[]
+
+  @@map("tutors")
+}
+
+// ─── 3.3 Clients ──────────────────────────────────────────────────────────────
+
+model Client {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balance     Decimal  @default(0) @db.Decimal(10, 2)
+  clientSince DateTime @map("client_since") @db.Date
+
+  // Optional: track which invite brought them in
+  inviteId    String?  @map("invite_id")
+  invite      Invite?  @relation(fields: [inviteId], references: [id])
+
+  students Student[]
+  jobs     Job[]
+  invoices Invoice[]
+
+  @@map("clients")
+}
+
+// ─── 3.4 Students ─────────────────────────────────────────────────────────────
+
+model Student {
+  id         String     @id @default(uuid())
+
+  // Young students may not have their own login
+  userId     String?    @unique @map("user_id")
+  user       User?      @relation(fields: [userId], references: [id])
+
+  clientId   String     @map("client_id")
+  client     Client     @relation(fields: [clientId], references: [id])
+
+  tutorId    String?    @map("tutor_id")
+  tutor      Tutor?     @relation(fields: [tutorId], references: [id])
+
+  firstName  String     @map("first_name") @db.VarChar(100)
+  lastName   String     @map("last_name") @db.VarChar(100)
+  grade      String?    @db.VarChar(50)
+  curriculum String?    @db.VarChar(50)
+  goals      String?
+  startDate  DateTime?  @map("start_date") @db.Date
+  status     UserStatus @default(prospect)
+
+  jobs        Job[]
+  lessons     Lesson[]
+  assessments Assessment[]
+
+  @@map("students")
+}
+
+// ─── 3.5 Jobs (Tutoring Engagements) ─────────────────────────────────────────
+
+model Job {
+  id        String    @id @default(uuid())
+  title     String    @db.VarChar(200)
+  subject   String?   @db.VarChar(100)
+
+  studentId String    @map("student_id")
+  student   Student   @relation(fields: [studentId], references: [id])
+
+  clientId  String    @map("client_id")
+  client    Client    @relation(fields: [clientId], references: [id])
+
+  tutorId   String?   @map("tutor_id")
+  tutor     Tutor?    @relation(fields: [tutorId], references: [id])
+
+  rate      Decimal   @db.Decimal(8, 2)
+  status    JobStatus @default(enquiry)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  lessons          Lesson[]
+  assessments      Assessment[]
+  curriculumTopics CurriculumTopic[]
+
+  @@map("jobs")
+}
+
+// ─── 3.6 Lessons ──────────────────────────────────────────────────────────────
+
+model Lesson {
+  id              String       @id @default(uuid())
+
+  jobId           String       @map("job_id")
+  job             Job          @relation(fields: [jobId], references: [id])
+
+  tutorId         String       @map("tutor_id")
+  tutor           Tutor        @relation(fields: [tutorId], references: [id])
+
+  studentId       String       @map("student_id")
+  student         Student      @relation(fields: [studentId], references: [id])
+
+  date            DateTime     @db.Date
+  startTime       DateTime     @map("start_time") @db.Time
+
+  // 45, 60, 90, or 120
+  durationMinutes Int          @map("duration_minutes")
+
+  status          LessonStatus @default(scheduled)
+  lessonspaceUrl  String?      @map("lessonspace_url") @db.VarChar(500)
+  report          String?
+
+  // Who booked this lesson (any role)
+  createdById     String       @map("created_by")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  @@map("lessons")
+}
+
+// ─── 3.7 Assessments ──────────────────────────────────────────────────────────
+
+model Assessment {
+  id        String         @id @default(uuid())
+
+  studentId String         @map("student_id")
+  student   Student        @relation(fields: [studentId], references: [id])
+
+  jobId     String         @map("job_id")
+  job       Job            @relation(fields: [jobId], references: [id])
+
+  tutorId   String         @map("tutor_id")
+  tutor     Tutor          @relation(fields: [tutorId], references: [id])
+
+  topic     String         @db.VarChar(200)
+  type      AssessmentType
+
+  score     Decimal        @db.Decimal(8, 2)
+  maxScore  Decimal        @map("max_score") @db.Decimal(8, 2)
+  date      DateTime       @db.Date
+  notes     String?
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@map("assessments")
+}
+
+// ─── 3.8 Invoices ─────────────────────────────────────────────────────────────
+
+model Invoice {
+  id              String        @id @default(uuid())
+
+  clientId        String        @map("client_id")
+  client          Client        @relation(fields: [clientId], references: [id])
+
+  amount          Decimal       @db.Decimal(10, 2)
+  status          InvoiceStatus @default(draft)
+  issuedDate      DateTime      @map("issued_date") @db.Date
+  dueDate         DateTime      @map("due_date") @db.Date
+
+  // Stripe reference — null until invoice is sent via Stripe
+  stripeInvoiceId String?       @map("stripe_invoice_id") @db.VarChar(100)
+  paidAt          DateTime?     @map("paid_at")
+
+  lineItems InvoiceLineItem[]
+
+  @@map("invoices")
+}
+
+// ─── 3.9 Invoice Line Items ───────────────────────────────────────────────────
+
+model InvoiceLineItem {
+  id          String  @id @default(uuid())
+
+  invoiceId   String  @map("invoice_id")
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  description String
+  amount      Decimal @db.Decimal(10, 2)
+
+  @@map("invoice_line_items")
+}
+
+// ─── 3.10 Applications (Tutor) ────────────────────────────────────────────────
+
+model Application {
+  id         String            @id @default(uuid())
+  name       String            @db.VarChar(200)
+  email      String            @db.VarChar(255)
+  phone      String?           @db.VarChar(20)
+  city       String?           @db.VarChar(100)
+  degree     String?
+  subjects   String[]
+  experience String?           @db.VarChar(50)
+  approach   String?
+  source     String?           @db.VarChar(100)
+  status     ApplicationStatus @default(pending)
+  appliedAt  DateTime          @default(now()) @map("applied_at")
+
+  reviewedBy String?           @map("reviewed_by")
+  reviewer   User?             @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+
+  @@map("applications")
+}
+
+// ─── 3.11 Invites (Client) ────────────────────────────────────────────────────
+
+model Invite {
+  id           String       @id @default(uuid())
+  email        String       @db.VarChar(255)
+  name         String       @db.VarChar(200)
+  personalNote String?      @map("personal_note")
+
+  // URL-safe token for the registration link: /register?token=<token>
+  token        String       @unique @db.VarChar(100)
+
+  status       InviteStatus @default(pending)
+  sentAt       DateTime     @default(now()) @map("sent_at")
+  acceptedAt   DateTime?    @map("accepted_at")
+  expiresAt    DateTime     @map("expires_at")
+
+  clients Client[]
+
+  @@map("invites")
+}
+
+// ─── 3.12 Curriculum Topics ───────────────────────────────────────────────────
+
+model CurriculumTopic {
+  id           String @id @default(uuid())
+
+  jobId        String @map("job_id")
+  job          Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  topicName    String @map("topic_name") @db.VarChar(200)
+  displayOrder Int    @map("display_order")
+
+  @@map("curriculum_topics")
+}
+
+// ─── 3.13 Consultations (from marketing site) ────────────────────────────────
+
+model Consultation {
+  id               String   @id @default(uuid())
+  firstName        String   @map("first_name") @db.VarChar(100)
+  lastName         String   @map("last_name") @db.VarChar(100)
+  email            String   @db.VarChar(255)
+  phone            String?  @db.VarChar(20)
+  province         String?  @db.VarChar(50)
+  subjects         String[]
+  gradeLevel       String?  @map("grade_level") @db.VarChar(100)
+  goals            String?
+  marketingConsent Boolean  @default(false) @map("marketing_consent")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("consultations")
+}
