@@ -1,75 +1,121 @@
 // ─── Mathbord Prisma Schema ───────────────────────────────────────────────────
-// SQLite variant for local development.
-// Production schema (PostgreSQL) is preserved in prisma/schema.postgres.prisma
-// To switch back: cp prisma/schema.postgres.prisma prisma/schema.prisma
+// 13 tables matching the data models in TECHNICAL_SPEC.md §3
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// NOTE: SQLite does not support native enums.
-// All enum types from the PostgreSQL schema are stored as String here.
-// Valid values are enforced at the application layer.
-//
-// Role:              admin | tutor | client | student
-// UserStatus:        active | inactive | prospect | suspended
-// JobStatus:         enquiry | active | paused | completed | cancelled
-// LessonStatus:      scheduled | completed | cancelled | no_show
-// AssessmentType:    diagnostic | quiz | assignment | test | practice_test | midterm | final
-// InvoiceStatus:     draft | sent | paid | overdue | cancelled
-// ApplicationStatus: pending | interview | approved | rejected
-// InviteStatus:      pending | accepted | expired
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  admin
+  tutor
+  client
+  student
+}
+
+enum UserStatus {
+  active
+  inactive
+  prospect
+  suspended
+}
+
+enum JobStatus {
+  enquiry
+  active
+  paused
+  completed
+  cancelled
+}
+
+enum LessonStatus {
+  scheduled
+  completed
+  cancelled
+  no_show
+}
+
+enum AssessmentType {
+  diagnostic
+  quiz
+  assignment
+  test
+  practice_test
+  midterm
+  final
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  cancelled
+}
+
+enum ApplicationStatus {
+  pending
+  interview
+  approved
+  rejected
+}
+
+enum InviteStatus {
+  pending
+  accepted
+  expired
+}
 
 // ─── 3.1 Users ────────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  role         String
-  firstName    String   @map("first_name")
-  lastName     String   @map("last_name")
-  phone        String?
-  avatarUrl    String?  @map("avatar_url")
-  country      String?
-  status       String   @default("active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  lastLogin    DateTime? @map("last_login")
+  id           String     @id @default(uuid())
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  role         Role
+  firstName    String     @map("first_name") @db.VarChar(100)
+  lastName     String     @map("last_name") @db.VarChar(100)
+  phone        String?    @db.VarChar(20)
+  avatarUrl    String?    @map("avatar_url") @db.VarChar(500)
+  status       UserStatus @default(active)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  lastLogin    DateTime?  @map("last_login")
 
+  // Profile relations (one-to-one)
   tutor        Tutor?
   client       Client?
   student      Student?
 
+  // Admin reviewed applications
   reviewedApplications Application[] @relation("ReviewedBy")
 
   @@map("users")
 }
 
 // ─── 3.2 Tutors ───────────────────────────────────────────────────────────────
-// subjects and levels are stored as JSON arrays: e.g. '["Calculus","Algebra"]'
 
 model Tutor {
   id         String  @id @default(uuid())
   userId     String  @unique @map("user_id")
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  subjects   String  @default("[]")
-  levels     String  @default("[]")
-  hourlyRate Float   @map("hourly_rate")
-  payRate    Float   @map("pay_rate")
-  country    String?
-  city       String?
-  province   String?
+  subjects   String[]
+  levels     String[]
+  hourlyRate Decimal  @map("hourly_rate") @db.Decimal(8, 2)
+  payRate    Decimal  @map("pay_rate") @db.Decimal(8, 2)
+  city       String?  @db.VarChar(100)
+  province   String?  @db.VarChar(50)
   degree     String?
   bio        String?
-  rating     Float   @default(0)
-  totalHours Float   @default(0) @map("total_hours")
+  rating     Decimal  @default(0) @db.Decimal(3, 2)
+  totalHours Decimal  @default(0) @map("total_hours") @db.Decimal(10, 2)
 
   jobs        Job[]
   lessons     Lesson[]
@@ -86,10 +132,10 @@ model Client {
   userId      String   @unique @map("user_id")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  country     String?
-  balance     Float    @default(0)
-  clientSince DateTime @map("client_since")
+  balance     Decimal  @default(0) @db.Decimal(10, 2)
+  clientSince DateTime @map("client_since") @db.Date
 
+  // Optional: track which invite brought them in
   inviteId    String?  @map("invite_id")
   invite      Invite?  @relation(fields: [inviteId], references: [id])
 
@@ -103,24 +149,25 @@ model Client {
 // ─── 3.4 Students ─────────────────────────────────────────────────────────────
 
 model Student {
-  id         String    @id @default(uuid())
+  id         String     @id @default(uuid())
 
-  userId     String?   @unique @map("user_id")
-  user       User?     @relation(fields: [userId], references: [id])
+  // Young students may not have their own login
+  userId     String?    @unique @map("user_id")
+  user       User?      @relation(fields: [userId], references: [id])
 
-  clientId   String    @map("client_id")
-  client     Client    @relation(fields: [clientId], references: [id])
+  clientId   String     @map("client_id")
+  client     Client     @relation(fields: [clientId], references: [id])
 
-  tutorId    String?   @map("tutor_id")
-  tutor      Tutor?    @relation(fields: [tutorId], references: [id])
+  tutorId    String?    @map("tutor_id")
+  tutor      Tutor?     @relation(fields: [tutorId], references: [id])
 
-  firstName  String    @map("first_name")
-  lastName   String    @map("last_name")
-  grade      String?
-  curriculum String?
+  firstName  String     @map("first_name") @db.VarChar(100)
+  lastName   String     @map("last_name") @db.VarChar(100)
+  grade      String?    @db.VarChar(50)
+  curriculum String?    @db.VarChar(50)
   goals      String?
-  startDate  DateTime? @map("start_date")
-  status     String    @default("prospect")
+  startDate  DateTime?  @map("start_date") @db.Date
+  status     UserStatus @default(prospect)
 
   jobs        Job[]
   lessons     Lesson[]
@@ -132,22 +179,22 @@ model Student {
 // ─── 3.5 Jobs (Tutoring Engagements) ─────────────────────────────────────────
 
 model Job {
-  id        String   @id @default(uuid())
-  title     String
-  subject   String?
+  id        String    @id @default(uuid())
+  title     String    @db.VarChar(200)
+  subject   String?   @db.VarChar(100)
 
-  studentId String   @map("student_id")
-  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String    @map("student_id")
+  student   Student   @relation(fields: [studentId], references: [id])
 
-  clientId  String   @map("client_id")
-  client    Client   @relation(fields: [clientId], references: [id])
+  clientId  String    @map("client_id")
+  client    Client    @relation(fields: [clientId], references: [id])
 
-  tutorId   String?  @map("tutor_id")
-  tutor     Tutor?   @relation(fields: [tutorId], references: [id])
+  tutorId   String?   @map("tutor_id")
+  tutor     Tutor?    @relation(fields: [tutorId], references: [id])
 
-  rate      Float
-  status    String   @default("enquiry")
-  createdAt DateTime @default(now()) @map("created_at")
+  rate      Decimal   @db.Decimal(8, 2)
+  status    JobStatus @default(enquiry)
+  createdAt DateTime  @default(now()) @map("created_at")
 
   lessons          Lesson[]
   assessments      Assessment[]
@@ -159,28 +206,30 @@ model Job {
 // ─── 3.6 Lessons ──────────────────────────────────────────────────────────────
 
 model Lesson {
-  id              String   @id @default(uuid())
+  id              String       @id @default(uuid())
 
-  jobId           String   @map("job_id")
-  job             Job      @relation(fields: [jobId], references: [id])
+  jobId           String       @map("job_id")
+  job             Job          @relation(fields: [jobId], references: [id])
 
-  tutorId         String   @map("tutor_id")
-  tutor           Tutor    @relation(fields: [tutorId], references: [id])
+  tutorId         String       @map("tutor_id")
+  tutor           Tutor        @relation(fields: [tutorId], references: [id])
 
-  studentId       String   @map("student_id")
-  student         Student  @relation(fields: [studentId], references: [id])
+  studentId       String       @map("student_id")
+  student         Student      @relation(fields: [studentId], references: [id])
 
-  date            DateTime
-  startTime       DateTime @map("start_time")
+  date            DateTime     @db.Date
+  startTime       DateTime     @map("start_time") @db.Time
 
-  durationMinutes Int      @map("duration_minutes")
+  // 45, 60, 90, or 120
+  durationMinutes Int          @map("duration_minutes")
 
-  status          String   @default("scheduled")
-  lessonspaceUrl  String?  @map("lessonspace_url")
+  status          LessonStatus @default(scheduled)
+  lessonspaceUrl  String?      @map("lessonspace_url") @db.VarChar(500)
   report          String?
 
-  createdById     String   @map("created_by")
-  createdAt       DateTime @default(now()) @map("created_at")
+  // Who booked this lesson (any role)
+  createdById     String       @map("created_by")
+  createdAt       DateTime     @default(now()) @map("created_at")
 
   @@map("lessons")
 }
@@ -188,25 +237,25 @@ model Lesson {
 // ─── 3.7 Assessments ──────────────────────────────────────────────────────────
 
 model Assessment {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
 
-  studentId String   @map("student_id")
-  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String         @map("student_id")
+  student   Student        @relation(fields: [studentId], references: [id])
 
-  jobId     String   @map("job_id")
-  job       Job      @relation(fields: [jobId], references: [id])
+  jobId     String         @map("job_id")
+  job       Job            @relation(fields: [jobId], references: [id])
 
-  tutorId   String   @map("tutor_id")
-  tutor     Tutor    @relation(fields: [tutorId], references: [id])
+  tutorId   String         @map("tutor_id")
+  tutor     Tutor          @relation(fields: [tutorId], references: [id])
 
-  topic     String
-  type      String
+  topic     String         @db.VarChar(200)
+  type      AssessmentType
 
-  score     Float
-  maxScore  Float    @map("max_score")
-  date      DateTime
+  score     Decimal        @db.Decimal(8, 2)
+  maxScore  Decimal        @map("max_score") @db.Decimal(8, 2)
+  date      DateTime       @db.Date
   notes     String?
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime       @default(now()) @map("created_at")
 
   @@map("assessments")
 }
@@ -214,18 +263,19 @@ model Assessment {
 // ─── 3.8 Invoices ─────────────────────────────────────────────────────────────
 
 model Invoice {
-  id              String    @id @default(uuid())
+  id              String        @id @default(uuid())
 
-  clientId        String    @map("client_id")
-  client          Client    @relation(fields: [clientId], references: [id])
+  clientId        String        @map("client_id")
+  client          Client        @relation(fields: [clientId], references: [id])
 
-  amount          Float
-  status          String    @default("draft")
-  issuedDate      DateTime  @map("issued_date")
-  dueDate         DateTime  @map("due_date")
+  amount          Decimal       @db.Decimal(10, 2)
+  status          InvoiceStatus @default(draft)
+  issuedDate      DateTime      @map("issued_date") @db.Date
+  dueDate         DateTime      @map("due_date") @db.Date
 
-  stripeInvoiceId String?   @map("stripe_invoice_id")
-  paidAt          DateTime? @map("paid_at")
+  // Stripe reference — null until invoice is sent via Stripe
+  stripeInvoiceId String?       @map("stripe_invoice_id") @db.VarChar(100)
+  paidAt          DateTime?     @map("paid_at")
 
   lineItems InvoiceLineItem[]
 
@@ -241,31 +291,29 @@ model InvoiceLineItem {
   invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   description String
-  amount      Float
+  amount      Decimal @db.Decimal(10, 2)
 
   @@map("invoice_line_items")
 }
 
 // ─── 3.10 Applications (Tutor) ────────────────────────────────────────────────
-// subjects stored as JSON array string: '["Calculus","Statistics"]'
 
 model Application {
-  id         String   @id @default(uuid())
-  name       String
-  email      String
-  phone      String?
-  country    String?
-  city       String?
+  id         String            @id @default(uuid())
+  name       String            @db.VarChar(200)
+  email      String            @db.VarChar(255)
+  phone      String?           @db.VarChar(20)
+  city       String?           @db.VarChar(100)
   degree     String?
-  subjects   String   @default("[]")
-  experience String?
+  subjects   String[]
+  experience String?           @db.VarChar(50)
   approach   String?
-  source     String?
-  status     String   @default("pending")
-  appliedAt  DateTime @default(now()) @map("applied_at")
+  source     String?           @db.VarChar(100)
+  status     ApplicationStatus @default(pending)
+  appliedAt  DateTime          @default(now()) @map("applied_at")
 
-  reviewedBy String?  @map("reviewed_by")
-  reviewer   User?    @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+  reviewedBy String?           @map("reviewed_by")
+  reviewer   User?             @relation("ReviewedBy", fields: [reviewedBy], references: [id])
 
   @@map("applications")
 }
@@ -273,17 +321,18 @@ model Application {
 // ─── 3.11 Invites (Client) ────────────────────────────────────────────────────
 
 model Invite {
-  id           String    @id @default(uuid())
-  email        String
-  name         String
-  personalNote String?   @map("personal_note")
+  id           String       @id @default(uuid())
+  email        String       @db.VarChar(255)
+  name         String       @db.VarChar(200)
+  personalNote String?      @map("personal_note")
 
-  token        String    @unique
+  // URL-safe token for the registration link: /register?token=<token>
+  token        String       @unique @db.VarChar(100)
 
-  status       String    @default("pending")
-  sentAt       DateTime  @default(now()) @map("sent_at")
-  acceptedAt   DateTime? @map("accepted_at")
-  expiresAt    DateTime  @map("expires_at")
+  status       InviteStatus @default(pending)
+  sentAt       DateTime     @default(now()) @map("sent_at")
+  acceptedAt   DateTime?    @map("accepted_at")
+  expiresAt    DateTime     @map("expires_at")
 
   clients Client[]
 
@@ -298,24 +347,23 @@ model CurriculumTopic {
   jobId        String @map("job_id")
   job          Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  topicName    String @map("topic_name")
+  topicName    String @map("topic_name") @db.VarChar(200)
   displayOrder Int    @map("display_order")
 
   @@map("curriculum_topics")
 }
 
 // ─── 3.13 Consultations (from marketing site) ────────────────────────────────
-// subjects stored as JSON array string
 
 model Consultation {
   id               String   @id @default(uuid())
-  firstName        String   @map("first_name")
-  lastName         String   @map("last_name")
-  email            String
-  phone            String?
-  province         String?
-  subjects         String   @default("[]")
-  gradeLevel       String?  @map("grade_level")
+  firstName        String   @map("first_name") @db.VarChar(100)
+  lastName         String   @map("last_name") @db.VarChar(100)
+  email            String   @db.VarChar(255)
+  phone            String?  @db.VarChar(20)
+  province         String?  @db.VarChar(50)
+  subjects         String[]
+  gradeLevel       String?  @map("grade_level") @db.VarChar(100)
   goals            String?
   marketingConsent Boolean  @default(false) @map("marketing_consent")
   createdAt        DateTime @default(now()) @map("created_at")
