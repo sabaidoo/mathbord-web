@@ -46,7 +46,6 @@ async function main() {
       firstName: "Alex",
       lastName: "Admin",
       phone: "604-555-0001",
-      country: "CA",
       status: "active",
     },
   });
@@ -57,7 +56,7 @@ async function main() {
     {
       userId: "u-t1", tutorId: "t1",
       email: "sarah@mathbord.com", firstName: "Sarah", lastName: "Chen",
-      phone: "604-555-1001", status: "active", country: "CA",
+      phone: "604-555-1001", status: "active",
       subjects: ["Calculus", "Linear Algebra"],
       levels: ["University"],
       hourlyRate: 65, payRate: 48,
@@ -69,7 +68,7 @@ async function main() {
     {
       userId: "u-t2", tutorId: "t2",
       email: "james@mathbord.com", firstName: "James", lastName: "Okafor",
-      phone: "416-555-1002", status: "active", country: "CA",
+      phone: "416-555-1002", status: "active",
       subjects: ["Functions", "Trigonometry"],
       levels: ["High School"],
       hourlyRate: 55, payRate: 40,
@@ -81,7 +80,7 @@ async function main() {
     {
       userId: "u-t3", tutorId: "t3",
       email: "priya@mathbord.com", firstName: "Priya", lastName: "Sharma",
-      phone: "604-555-1003", status: "active", country: "CA",
+      phone: "604-555-1003", status: "active",
       subjects: ["SAT Math", "GRE Quant"],
       levels: ["Exam Prep"],
       hourlyRate: 70, payRate: 52,
@@ -93,7 +92,7 @@ async function main() {
     {
       userId: "u-t4", tutorId: "t4",
       email: "michael@mathbord.com", firstName: "Michael", lastName: "Park",
-      phone: "778-555-1004", status: "active", country: "CA",
+      phone: "778-555-1004", status: "active",
       subjects: ["IB Math AA", "AP Calculus"],
       levels: ["IB/AP"],
       hourlyRate: 60, payRate: 45,
@@ -105,7 +104,7 @@ async function main() {
     {
       userId: "u-t5", tutorId: "t5",
       email: "emily@mathbord.com", firstName: "Emily", lastName: "Torres",
-      phone: "514-555-1005", status: "prospect", country: "CA",
+      phone: "514-555-1005", status: "prospect",
       subjects: ["Grade 7-10 Math"],
       levels: ["Middle School", "High School"],
       hourlyRate: 45, payRate: 32,
@@ -117,7 +116,7 @@ async function main() {
     {
       userId: "u-t6", tutorId: "t6",
       email: "oliver@mathbord.com", firstName: "Oliver", lastName: "Hughes",
-      phone: "+44-20-7946-0958", status: "active", country: "UK",
+      phone: "+44-20-7946-0958", status: "active",
       subjects: ["GCSE Maths", "A-Level Maths"],
       levels: ["GCSE", "A-Level"],
       hourlyRate: 55, payRate: 40,
@@ -129,7 +128,7 @@ async function main() {
     {
       userId: "u-t7", tutorId: "t7",
       email: "charlotte@mathbord.com", firstName: "Charlotte", lastName: "Webb",
-      phone: "+44-7911-123456", status: "active", country: "UK",
+      phone: "+44-7911-123456", status: "active",
       subjects: ["A-Level Further Maths", "Decision Maths"],
       levels: ["A-Level", "Further Maths"],
       hourlyRate: 65, payRate: 48,
@@ -141,7 +140,7 @@ async function main() {
     {
       userId: "u-t8", tutorId: "t8",
       email: "marcus@mathbord.com", firstName: "Marcus", lastName: "Johnson",
-      phone: "+1-212-555-0147", status: "active", country: "US",
+      phone: "+1-212-555-0147", status: "active",
       subjects: ["Algebra I", "Geometry", "Pre-Calculus"],
       levels: ["High School"],
       hourlyRate: 60, payRate: 44,
@@ -153,7 +152,7 @@ async function main() {
     {
       userId: "u-t9", tutorId: "t9",
       email: "jennifer@mathbord.com", firstName: "Jennifer", lastName: "Martinez",
-      phone: "+1-415-555-0198", status: "active", country: "US",
+      phone: "+1-415-555-0198", status: "active",
       subjects: ["GMAT Quant", "MBA Admissions"],
       levels: ["MBA Prep"],
       hourlyRate: 85, payRate: 62,
@@ -174,7 +173,6 @@ async function main() {
         firstName: t.firstName,
         lastName: t.lastName,
         phone: t.phone,
-        country: t.country,
         status: t.status,
       },
     });
@@ -182,11 +180,10 @@ async function main() {
       data: {
         id: t.tutorId,
         userId: user.id,
-        subjects: JSON.stringify(t.subjects),
-        levels: JSON.stringify(t.levels),
+        subjects: t.subjects,
+        levels: t.levels,
         hourlyRate: t.hourlyRate,
         payRate: t.payRate,
-        country: t.country,
         city: t.city,
         province: t.province,
         degree: t.degree,
@@ -219,12 +216,12 @@ async function main() {
 
   // ─── Client users + profiles ──────────────────────────────────────────────
   const clientSeeds = [
-    { userId: "u-c1", clientId: "c1", email: "parks@email.com", firstName: "David & Lin", lastName: "Park", phone: "604-555-2001", country: "CA", balance: 0, clientSince: new Date("2025-09-01"), inviteId: "inv1" },
-    { userId: "u-c2", clientId: "c2", email: "rachel.m@email.com", firstName: "Rachel", lastName: "Morrison", phone: "416-555-2002", country: "CA", balance: 125, clientSince: new Date("2025-07-01"), inviteId: "inv2" },
-    { userId: "u-c3", clientId: "c3", email: "hassan.family@email.com", firstName: "Ahmad & Fatima", lastName: "Hassan", phone: "604-555-2003", country: "CA", balance: 0, clientSince: new Date("2025-11-01"), inviteId: "inv3" },
-    { userId: "u-c4", clientId: "c4", email: "j.liu@email.com", firstName: "Jennifer", lastName: "Liu", phone: "778-555-2004", country: "CA", balance: 0, clientSince: new Date("2026-01-01"), inviteId: null },
-    { userId: "u-c5", clientId: "c5", email: "taylors@email.co.uk", firstName: "James & Sarah", lastName: "Taylor", phone: "+44-20-7946-0234", country: "UK", balance: 0, clientSince: new Date("2025-12-01"), inviteId: "inv6" },
-    { userId: "u-c6", clientId: "c6", email: "r.williams@email.com", firstName: "Robert", lastName: "Williams", phone: "+1-212-555-0321", country: "US", balance: 0, clientSince: new Date("2026-01-01"), inviteId: "inv7" },
+    { userId: "u-c1", clientId: "c1", email: "parks@email.com", firstName: "David & Lin", lastName: "Park", phone: "604-555-2001", balance: 0, clientSince: new Date("2025-09-01"), inviteId: "inv1" },
+    { userId: "u-c2", clientId: "c2", email: "rachel.m@email.com", firstName: "Rachel", lastName: "Morrison", phone: "416-555-2002", balance: 125, clientSince: new Date("2025-07-01"), inviteId: "inv2" },
+    { userId: "u-c3", clientId: "c3", email: "hassan.family@email.com", firstName: "Ahmad & Fatima", lastName: "Hassan", phone: "604-555-2003", balance: 0, clientSince: new Date("2025-11-01"), inviteId: "inv3" },
+    { userId: "u-c4", clientId: "c4", email: "j.liu@email.com", firstName: "Jennifer", lastName: "Liu", phone: "778-555-2004", balance: 0, clientSince: new Date("2026-01-01"), inviteId: null },
+    { userId: "u-c5", clientId: "c5", email: "taylors@email.co.uk", firstName: "James & Sarah", lastName: "Taylor", phone: "+44-20-7946-0234", balance: 0, clientSince: new Date("2025-12-01"), inviteId: "inv6" },
+    { userId: "u-c6", clientId: "c6", email: "r.williams@email.com", firstName: "Robert", lastName: "Williams", phone: "+1-212-555-0321", balance: 0, clientSince: new Date("2026-01-01"), inviteId: "inv7" },
   ];
 
   for (const c of clientSeeds) {
@@ -237,7 +234,6 @@ async function main() {
         firstName: c.firstName,
         lastName: c.lastName,
         phone: c.phone,
-        country: c.country,
         status: "active",
       },
     });
@@ -245,7 +241,6 @@ async function main() {
       data: {
         id: c.clientId,
         userId: user.id,
-        country: c.country,
         balance: c.balance,
         clientSince: c.clientSince,
         inviteId: c.inviteId,
@@ -466,18 +461,18 @@ async function main() {
 
   // ─── Tutor applications ───────────────────────────────────────────────────
   const applicationSeeds = [
-    { name: "Emily Torres", email: "emily@email.com", phone: "514-555-1005", country: "CA", city: "Montreal, QC", degree: "B.Sc. Mathematics, McGill University", subjects: ["Grade 7-10 Math", "High School Functions"], experience: "3-5 years", approach: "I focus on building conceptual understanding before drilling procedures. I use visual models and real-world examples to make abstract concepts click.", source: "LinkedIn", status: "interview", appliedAt: new Date("2026-02-20") },
-    { name: "Daniel Kim", email: "d.kim@email.com", phone: "604-555-3001", country: "CA", city: "Vancouver, BC", degree: "M.Sc. Applied Mathematics, UBC", subjects: ["University Calculus", "Linear Algebra", "Statistics / Probability"], experience: "5+ years", approach: "Former TA at UBC. I specialize in helping struggling university students pass their courses with structured review sessions and practice tests.", source: "Google Search", status: "pending", appliedAt: new Date("2026-02-25") },
-    { name: "Aisha Mohammed", email: "aisha.m@email.com", phone: "416-555-3002", country: "CA", city: "Toronto, ON", degree: "B.Ed. & B.Sc. Mathematics, University of Toronto", subjects: ["High School Functions", "High School Calculus", "IB Math (AA / AI)"], experience: "5+ years", approach: "Certified Ontario teacher with 6 years of classroom experience. I bring structured lesson plans and formative assessment to every session.", source: "Referral from a friend", status: "pending", appliedAt: new Date("2026-02-26") },
-    { name: "Ryan Fletcher", email: "ryan.f@email.com", phone: "250-555-3003", country: "CA", city: "Victoria, BC", degree: "B.Eng. Mechanical Engineering, UVic", subjects: ["SAT / PSAT Math", "AP Calculus (AB / BC)"], experience: "1-2 years", approach: "I scored 800 on the SAT Math and 5 on AP Calc BC. I help students master test strategy alongside content.", source: "University job board", status: "pending", appliedAt: new Date("2026-02-27") },
-    { name: "Lisa Wang", email: "l.wang@email.com", phone: "778-555-3004", country: "CA", city: "Burnaby, BC", degree: "B.Sc. Actuarial Science, SFU", subjects: ["High School Functions", "Statistics / Probability", "GRE / GMAT Quant"], experience: "3-5 years", approach: "I combine actuarial problem-solving skills with patience for foundational math. My students consistently exceed their target scores.", source: "LinkedIn", status: "rejected", appliedAt: new Date("2026-02-15") },
-    { name: "Hannah Clarke", email: "h.clarke@email.co.uk", phone: "+44-7700-900123", country: "UK", city: "London, UK", degree: "MMath Mathematics, University of Warwick", subjects: ["UK GCSE Maths", "UK A-Level Maths", "UK Further Maths"], experience: "3-5 years", approach: "Former head of maths at a London secondary school. I specialize in GCSE and A-Level exam technique across all exam boards — AQA, Edexcel, and OCR.", source: "LinkedIn", status: "pending", appliedAt: new Date("2026-03-01") },
-    { name: "David Chen", email: "d.chen.tutor@email.com", phone: "+1-617-555-0142", country: "US", city: "Boston, MA", degree: "M.S. Mathematics Education, Boston University", subjects: ["US Common Core (K-8)", "US Algebra / Geometry", "GMAT Quant", "MBA Admissions Advisory"], experience: "5+ years", approach: "Former math department chair with 8 years of teaching experience. I also coach GMAT candidates and provide MBA admissions consulting for Harvard, MIT Sloan, and Wharton applicants.", source: "Google Search", status: "pending", appliedAt: new Date("2026-03-02") },
+    { name: "Emily Torres", email: "emily@email.com", phone: "514-555-1005", city: "Montreal, QC", degree: "B.Sc. Mathematics, McGill University", subjects: ["Grade 7-10 Math", "High School Functions"], experience: "3-5 years", approach: "I focus on building conceptual understanding before drilling procedures. I use visual models and real-world examples to make abstract concepts click.", source: "LinkedIn", status: "interview", appliedAt: new Date("2026-02-20") },
+    { name: "Daniel Kim", email: "d.kim@email.com", phone: "604-555-3001", city: "Vancouver, BC", degree: "M.Sc. Applied Mathematics, UBC", subjects: ["University Calculus", "Linear Algebra", "Statistics / Probability"], experience: "5+ years", approach: "Former TA at UBC. I specialize in helping struggling university students pass their courses with structured review sessions and practice tests.", source: "Google Search", status: "pending", appliedAt: new Date("2026-02-25") },
+    { name: "Aisha Mohammed", email: "aisha.m@email.com", phone: "416-555-3002", city: "Toronto, ON", degree: "B.Ed. & B.Sc. Mathematics, University of Toronto", subjects: ["High School Functions", "High School Calculus", "IB Math (AA / AI)"], experience: "5+ years", approach: "Certified Ontario teacher with 6 years of classroom experience. I bring structured lesson plans and formative assessment to every session.", source: "Referral from a friend", status: "pending", appliedAt: new Date("2026-02-26") },
+    { name: "Ryan Fletcher", email: "ryan.f@email.com", phone: "250-555-3003", city: "Victoria, BC", degree: "B.Eng. Mechanical Engineering, UVic", subjects: ["SAT / PSAT Math", "AP Calculus (AB / BC)"], experience: "1-2 years", approach: "I scored 800 on the SAT Math and 5 on AP Calc BC. I help students master test strategy alongside content.", source: "University job board", status: "pending", appliedAt: new Date("2026-02-27") },
+    { name: "Lisa Wang", email: "l.wang@email.com", phone: "778-555-3004", city: "Burnaby, BC", degree: "B.Sc. Actuarial Science, SFU", subjects: ["High School Functions", "Statistics / Probability", "GRE / GMAT Quant"], experience: "3-5 years", approach: "I combine actuarial problem-solving skills with patience for foundational math. My students consistently exceed their target scores.", source: "LinkedIn", status: "rejected", appliedAt: new Date("2026-02-15") },
+    { name: "Hannah Clarke", email: "h.clarke@email.co.uk", phone: "+44-7700-900123", city: "London, UK", degree: "MMath Mathematics, University of Warwick", subjects: ["UK GCSE Maths", "UK A-Level Maths", "UK Further Maths"], experience: "3-5 years", approach: "Former head of maths at a London secondary school. I specialize in GCSE and A-Level exam technique across all exam boards — AQA, Edexcel, and OCR.", source: "LinkedIn", status: "pending", appliedAt: new Date("2026-03-01") },
+    { name: "David Chen", email: "d.chen.tutor@email.com", phone: "+1-617-555-0142", city: "Boston, MA", degree: "M.S. Mathematics Education, Boston University", subjects: ["US Common Core (K-8)", "US Algebra / Geometry", "GMAT Quant", "MBA Admissions Advisory"], experience: "5+ years", approach: "Former math department chair with 8 years of teaching experience. I also coach GMAT candidates and provide MBA admissions consulting for Harvard, MIT Sloan, and Wharton applicants.", source: "Google Search", status: "pending", appliedAt: new Date("2026-03-02") },
   ];
 
   for (const app of applicationSeeds) {
     await prisma.application.create({
-      data: { ...app, subjects: JSON.stringify(app.subjects) },
+      data: app,
     });
   }
   console.log("  ✓ Applications:", applicationSeeds.length);
