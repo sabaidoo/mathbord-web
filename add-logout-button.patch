@@ -1,0 +1,28 @@
+diff --git a/src/components/dashboard/sidebar.tsx b/src/components/dashboard/sidebar.tsx
+index c99d858..cbdf507 100644
+--- a/src/components/dashboard/sidebar.tsx
++++ b/src/components/dashboard/sidebar.tsx
+@@ -2,6 +2,7 @@
+ 
+ import Link from "next/link";
+ import { usePathname } from "next/navigation";
++import { signOut } from "next-auth/react";
+ 
+ interface NavItem {
+   label: string;
+@@ -149,7 +150,14 @@ export function Sidebar({ role, userName }: SidebarProps) {
+         <p className="text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-2">
+           {roleLabel}
+         </p>
+-        <p className="text-sm font-medium text-white/80 truncate">{userName}</p>
++        <p className="text-sm font-medium text-white/80 truncate mb-3">{userName}</p>
++        <button
++          onClick={() => signOut({ callbackUrl: "/login" })}
++          className="flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors w-full"
++        >
++          <span>🚪</span>
++          <span>Sign out</span>
++        </button>
+       </div>
+     </aside>
+   );
