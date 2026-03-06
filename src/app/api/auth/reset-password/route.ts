@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyResetToken } from "@/lib/password-reset";
 import { hash } from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
 // PUBLIC — no auth required
 export async function POST(req: NextRequest) {
   let body: { token?: unknown; password?: unknown };

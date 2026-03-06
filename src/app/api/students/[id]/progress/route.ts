@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getStudentProgress } from "@/lib/progress";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }

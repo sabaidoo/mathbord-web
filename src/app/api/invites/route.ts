@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { sendInviteEmail } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

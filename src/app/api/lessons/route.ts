@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { sendBookingConfirmation } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 const VALID_DURATIONS = [45, 60, 90, 120];
 
 export async function GET(req: NextRequest) {

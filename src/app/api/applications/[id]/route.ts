@@ -6,6 +6,8 @@ import { sendApplicationStatus } from "@/lib/email";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
+export const dynamic = "force-dynamic";
+
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }

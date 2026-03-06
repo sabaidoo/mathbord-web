@@ -6,6 +6,8 @@ import { getStudentProgress } from "@/lib/progress";
 import { fmtDate } from "@/lib/utils";
 import { ProgressCard } from "@/components/progress-card";
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentDashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "student") redirect("/login");

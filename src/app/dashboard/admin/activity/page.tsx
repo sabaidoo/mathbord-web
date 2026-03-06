@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { fmtDate, fmtMoney } from "@/lib/utils";
 import CalendarWidget from "@/components/calendar-widget";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminActivityPage({
   searchParams,
 }: {

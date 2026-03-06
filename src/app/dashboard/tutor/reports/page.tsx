@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { fmtDate } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function TutorReportsPage() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "tutor") redirect("/login");

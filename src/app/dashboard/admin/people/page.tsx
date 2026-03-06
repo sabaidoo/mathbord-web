@@ -6,6 +6,8 @@ import { fmtDate, fmtMoney, initials, parseArr } from "@/lib/utils";
 import { ApplicationActions } from "./application-actions";
 import { InviteButton } from "./invite-button";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPeoplePage({
   searchParams,
 }: {

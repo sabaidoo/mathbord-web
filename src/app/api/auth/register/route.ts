@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 interface StudentInput {
   firstName: string;
   lastName: string;

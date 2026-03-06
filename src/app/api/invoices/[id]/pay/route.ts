@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }

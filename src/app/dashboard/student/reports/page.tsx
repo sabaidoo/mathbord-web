@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getStudentProgress } from "@/lib/progress";
 import { fmtDate } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentReportsPage() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "student") redirect("/login");

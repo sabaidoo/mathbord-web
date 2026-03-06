@@ -1,0 +1,518 @@
+diff --git a/package.json b/package.json
+index a4f85a1..2f8cd01 100644
+--- a/package.json
++++ b/package.json
+@@ -4,7 +4,7 @@
+   "private": true,
+   "scripts": {
+     "dev": "next dev",
+-    "build": "next build",
++    "build": "prisma generate && next build",
+     "start": "next start",
+     "lint": "next lint",
+     "db:generate": "prisma generate",
+diff --git a/src/app/api/applications/[id]/route.ts b/src/app/api/applications/[id]/route.ts
+index 8af9c8c..7539b0e 100644
+--- a/src/app/api/applications/[id]/route.ts
++++ b/src/app/api/applications/[id]/route.ts
+@@ -6,6 +6,8 @@ import { sendApplicationStatus } from "@/lib/email";
+ import bcrypt from "bcryptjs";
+ import crypto from "crypto";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function PUT(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+diff --git a/src/app/api/applications/route.ts b/src/app/api/applications/route.ts
+index 4c72bd5..ac58798 100644
+--- a/src/app/api/applications/route.ts
++++ b/src/app/api/applications/route.ts
+@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ import { sendApplicationReceived } from "@/lib/email";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function GET(_req: NextRequest) {
+   const session = await getServerSession(authOptions);
+   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+diff --git a/src/app/api/assessments/[id]/route.ts b/src/app/api/assessments/[id]/route.ts
+index 746596c..6e0ec20 100644
+--- a/src/app/api/assessments/[id]/route.ts
++++ b/src/app/api/assessments/[id]/route.ts
+@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
+ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function PUT(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+diff --git a/src/app/api/assessments/route.ts b/src/app/api/assessments/route.ts
+index 5e78168..1b04997 100644
+--- a/src/app/api/assessments/route.ts
++++ b/src/app/api/assessments/route.ts
+@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
+ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function GET(req: NextRequest) {
+   const session = await getServerSession(authOptions);
+   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+diff --git a/src/app/api/auth/[...nextauth]/route.ts b/src/app/api/auth/[...nextauth]/route.ts
+index 7b38c1b..bd7435b 100644
+--- a/src/app/api/auth/[...nextauth]/route.ts
++++ b/src/app/api/auth/[...nextauth]/route.ts
+@@ -1,6 +1,8 @@
+ import NextAuth from "next-auth";
+ import { authOptions } from "@/lib/auth";
+ 
++export const dynamic = "force-dynamic";
++
+ const handler = NextAuth(authOptions);
+ 
+ export { handler as GET, handler as POST };
+diff --git a/src/app/api/auth/forgot-password/route.ts b/src/app/api/auth/forgot-password/route.ts
+index 69e5522..2eb30e2 100644
+--- a/src/app/api/auth/forgot-password/route.ts
++++ b/src/app/api/auth/forgot-password/route.ts
+@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
+ import { generateResetToken } from "@/lib/password-reset";
+ import { sendPasswordReset } from "@/lib/email";
+ 
++export const dynamic = "force-dynamic";
++
+ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+ 
+ // PUBLIC — no auth required
+diff --git a/src/app/api/auth/register/route.ts b/src/app/api/auth/register/route.ts
+index 6d28f7b..b16538e 100644
+--- a/src/app/api/auth/register/route.ts
++++ b/src/app/api/auth/register/route.ts
+@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
+ import { hash } from "bcryptjs";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ interface StudentInput {
+   firstName: string;
+   lastName: string;
+diff --git a/src/app/api/auth/reset-password/route.ts b/src/app/api/auth/reset-password/route.ts
+index 03743c6..9f5db94 100644
+--- a/src/app/api/auth/reset-password/route.ts
++++ b/src/app/api/auth/reset-password/route.ts
+@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
+ import { verifyResetToken } from "@/lib/password-reset";
+ import { hash } from "bcryptjs";
+ 
++export const dynamic = "force-dynamic";
++
+ // PUBLIC — no auth required
+ export async function POST(req: NextRequest) {
+   let body: { token?: unknown; password?: unknown };
+diff --git a/src/app/api/consultations/route.ts b/src/app/api/consultations/route.ts
+index e93680a..5e98e0c 100644
+--- a/src/app/api/consultations/route.ts
++++ b/src/app/api/consultations/route.ts
+@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ import { sendAdminConsultationAlert } from "@/lib/email";
+ 
++export const dynamic = "force-dynamic";
++
+ // PUBLIC — no auth required; submitted from the marketing/landing page
+ export async function POST(req: NextRequest) {
+   let body: {
+diff --git a/src/app/api/invites/[token]/route.ts b/src/app/api/invites/[token]/route.ts
+index d00147e..167df54 100644
+--- a/src/app/api/invites/[token]/route.ts
++++ b/src/app/api/invites/[token]/route.ts
+@@ -1,6 +1,8 @@
+ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ // PUBLIC — no auth required; used by the registration page to validate an invite token
+ export async function GET(
+   req: NextRequest,
+diff --git a/src/app/api/invites/route.ts b/src/app/api/invites/route.ts
+index 65fbb4f..04489b3 100644
+--- a/src/app/api/invites/route.ts
++++ b/src/app/api/invites/route.ts
+@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ import { sendInviteEmail } from "@/lib/email";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function GET(_req: NextRequest) {
+   const session = await getServerSession(authOptions);
+   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+diff --git a/src/app/api/invoices/[id]/pay/route.ts b/src/app/api/invoices/[id]/pay/route.ts
+index dfee74a..ba3fb13 100644
+--- a/src/app/api/invoices/[id]/pay/route.ts
++++ b/src/app/api/invoices/[id]/pay/route.ts
+@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
+ import { stripe } from "@/lib/stripe";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function POST(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+diff --git a/src/app/api/invoices/[id]/route.ts b/src/app/api/invoices/[id]/route.ts
+index 0a3e5df..2287a77 100644
+--- a/src/app/api/invoices/[id]/route.ts
++++ b/src/app/api/invoices/[id]/route.ts
+@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
+ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function GET(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+diff --git a/src/app/api/invoices/route.ts b/src/app/api/invoices/route.ts
+index 1313644..53875e2 100644
+--- a/src/app/api/invoices/route.ts
++++ b/src/app/api/invoices/route.ts
+@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
+ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function GET(req: NextRequest) {
+   const session = await getServerSession(authOptions);
+   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+diff --git a/src/app/api/jobs/[id]/route.ts b/src/app/api/jobs/[id]/route.ts
+index 3f079a1..f79a93c 100644
+--- a/src/app/api/jobs/[id]/route.ts
++++ b/src/app/api/jobs/[id]/route.ts
+@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
+ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function PUT(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+diff --git a/src/app/api/jobs/route.ts b/src/app/api/jobs/route.ts
+index c816819..23c3487 100644
+--- a/src/app/api/jobs/route.ts
++++ b/src/app/api/jobs/route.ts
+@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
+ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function GET(_req: NextRequest) {
+   const session = await getServerSession(authOptions);
+   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+diff --git a/src/app/api/lessons/[id]/route.ts b/src/app/api/lessons/[id]/route.ts
+index fbfc632..2766917 100644
+--- a/src/app/api/lessons/[id]/route.ts
++++ b/src/app/api/lessons/[id]/route.ts
+@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
+ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function PUT(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+diff --git a/src/app/api/lessons/route.ts b/src/app/api/lessons/route.ts
+index 7b921cf..ec30854 100644
+--- a/src/app/api/lessons/route.ts
++++ b/src/app/api/lessons/route.ts
+@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
+ import { NextRequest, NextResponse } from "next/server";
+ import { sendBookingConfirmation } from "@/lib/email";
+ 
++export const dynamic = "force-dynamic";
++
+ const VALID_DURATIONS = [45, 60, 90, 120];
+ 
+ export async function GET(req: NextRequest) {
+diff --git a/src/app/api/students/[id]/progress/route.ts b/src/app/api/students/[id]/progress/route.ts
+index 1f4eedf..a5a5d48 100644
+--- a/src/app/api/students/[id]/progress/route.ts
++++ b/src/app/api/students/[id]/progress/route.ts
+@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
+ import { getStudentProgress } from "@/lib/progress";
+ import { NextRequest, NextResponse } from "next/server";
+ 
++export const dynamic = "force-dynamic";
++
+ export async function GET(
+   req: NextRequest,
+   { params }: { params: { id: string } }
+diff --git a/src/app/dashboard/admin/accounting/page.tsx b/src/app/dashboard/admin/accounting/page.tsx
+index b44aa55..36c393d 100644
+--- a/src/app/dashboard/admin/accounting/page.tsx
++++ b/src/app/dashboard/admin/accounting/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import { fmtMoney, fmtDate } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function AdminAccountingPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "admin") redirect("/login");
+diff --git a/src/app/dashboard/admin/activity/page.tsx b/src/app/dashboard/admin/activity/page.tsx
+index 375392f..8822918 100644
+--- a/src/app/dashboard/admin/activity/page.tsx
++++ b/src/app/dashboard/admin/activity/page.tsx
+@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
+ import { fmtDate, fmtMoney } from "@/lib/utils";
+ import CalendarWidget from "@/components/calendar-widget";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function AdminActivityPage({
+   searchParams,
+ }: {
+diff --git a/src/app/dashboard/admin/analytics/page.tsx b/src/app/dashboard/admin/analytics/page.tsx
+index 1344895..2e31e3e 100644
+--- a/src/app/dashboard/admin/analytics/page.tsx
++++ b/src/app/dashboard/admin/analytics/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import { fmtMoney } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function AdminAnalyticsPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "admin") redirect("/login");
+diff --git a/src/app/dashboard/admin/page.tsx b/src/app/dashboard/admin/page.tsx
+index 6ede4ff..d6418a6 100644
+--- a/src/app/dashboard/admin/page.tsx
++++ b/src/app/dashboard/admin/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import { fmtMoney, fmtDate } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function AdminDashboardPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "admin") redirect("/login");
+diff --git a/src/app/dashboard/admin/people/page.tsx b/src/app/dashboard/admin/people/page.tsx
+index 1313c72..c8b61e3 100644
+--- a/src/app/dashboard/admin/people/page.tsx
++++ b/src/app/dashboard/admin/people/page.tsx
+@@ -6,6 +6,8 @@ import { fmtDate, fmtMoney, initials, parseArr } from "@/lib/utils";
+ import { ApplicationActions } from "./application-actions";
+ import { InviteButton } from "./invite-button";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function AdminPeoplePage({
+   searchParams,
+ }: {
+diff --git a/src/app/dashboard/client/invoices/page.tsx b/src/app/dashboard/client/invoices/page.tsx
+index be99ae6..5890976 100644
+--- a/src/app/dashboard/client/invoices/page.tsx
++++ b/src/app/dashboard/client/invoices/page.tsx
+@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
+ import { fmtMoney, fmtDate } from "@/lib/utils";
+ import InvoicePayButton from "./pay-button";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function ClientInvoicesPage({
+   searchParams,
+ }: {
+diff --git a/src/app/dashboard/client/page.tsx b/src/app/dashboard/client/page.tsx
+index f9373fe..4afded4 100644
+--- a/src/app/dashboard/client/page.tsx
++++ b/src/app/dashboard/client/page.tsx
+@@ -6,6 +6,8 @@ import { getStudentProgress } from "@/lib/progress";
+ import { fmtMoney } from "@/lib/utils";
+ import { ProgressCard } from "@/components/progress-card";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function ClientDashboardPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "client") redirect("/login");
+diff --git a/src/app/dashboard/client/reports/page.tsx b/src/app/dashboard/client/reports/page.tsx
+index 54eea7a..8f4653a 100644
+--- a/src/app/dashboard/client/reports/page.tsx
++++ b/src/app/dashboard/client/reports/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import { fmtDate } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function ClientReportsPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "client") redirect("/login");
+diff --git a/src/app/dashboard/client/schedule/page.tsx b/src/app/dashboard/client/schedule/page.tsx
+index 9289593..40bda5a 100644
+--- a/src/app/dashboard/client/schedule/page.tsx
++++ b/src/app/dashboard/client/schedule/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import CalendarWidget from "@/components/calendar-widget";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function ClientSchedulePage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "client") redirect("/login");
+diff --git a/src/app/dashboard/client/students/page.tsx b/src/app/dashboard/client/students/page.tsx
+index 2a1a530..9184eca 100644
+--- a/src/app/dashboard/client/students/page.tsx
++++ b/src/app/dashboard/client/students/page.tsx
+@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
+ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function ClientStudentsPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "client") redirect("/login");
+diff --git a/src/app/dashboard/student/page.tsx b/src/app/dashboard/student/page.tsx
+index d3544aa..0e3f444 100644
+--- a/src/app/dashboard/student/page.tsx
++++ b/src/app/dashboard/student/page.tsx
+@@ -6,6 +6,8 @@ import { getStudentProgress } from "@/lib/progress";
+ import { fmtDate } from "@/lib/utils";
+ import { ProgressCard } from "@/components/progress-card";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function StudentDashboardPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "student") redirect("/login");
+diff --git a/src/app/dashboard/student/reports/page.tsx b/src/app/dashboard/student/reports/page.tsx
+index 5e77006..ea4f48a 100644
+--- a/src/app/dashboard/student/reports/page.tsx
++++ b/src/app/dashboard/student/reports/page.tsx
+@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
+ import { getStudentProgress } from "@/lib/progress";
+ import { fmtDate } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function StudentReportsPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "student") redirect("/login");
+diff --git a/src/app/dashboard/student/schedule/page.tsx b/src/app/dashboard/student/schedule/page.tsx
+index d187dc0..7f0d0d6 100644
+--- a/src/app/dashboard/student/schedule/page.tsx
++++ b/src/app/dashboard/student/schedule/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import CalendarWidget from "@/components/calendar-widget";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function StudentSchedulePage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "student") redirect("/login");
+diff --git a/src/app/dashboard/tutor/earnings/page.tsx b/src/app/dashboard/tutor/earnings/page.tsx
+index 34c3fc3..ad17372 100644
+--- a/src/app/dashboard/tutor/earnings/page.tsx
++++ b/src/app/dashboard/tutor/earnings/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import { fmtMoney, fmtDate } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function TutorEarningsPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "tutor") redirect("/login");
+diff --git a/src/app/dashboard/tutor/jobs/page.tsx b/src/app/dashboard/tutor/jobs/page.tsx
+index 4e1e1d1..adf18c9 100644
+--- a/src/app/dashboard/tutor/jobs/page.tsx
++++ b/src/app/dashboard/tutor/jobs/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import { fmtMoney } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function TutorJobsPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "tutor") redirect("/login");
+diff --git a/src/app/dashboard/tutor/page.tsx b/src/app/dashboard/tutor/page.tsx
+index 2dbb72c..8abb8de 100644
+--- a/src/app/dashboard/tutor/page.tsx
++++ b/src/app/dashboard/tutor/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import { fmtMoney } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function TutorDashboardPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "tutor") redirect("/login");
+diff --git a/src/app/dashboard/tutor/reports/page.tsx b/src/app/dashboard/tutor/reports/page.tsx
+index 121829c..320edf5 100644
+--- a/src/app/dashboard/tutor/reports/page.tsx
++++ b/src/app/dashboard/tutor/reports/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import { fmtDate } from "@/lib/utils";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function TutorReportsPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "tutor") redirect("/login");
+diff --git a/src/app/dashboard/tutor/schedule/page.tsx b/src/app/dashboard/tutor/schedule/page.tsx
+index 129342f..353cb6f 100644
+--- a/src/app/dashboard/tutor/schedule/page.tsx
++++ b/src/app/dashboard/tutor/schedule/page.tsx
+@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
+ import { prisma } from "@/lib/prisma";
+ import CalendarWidget from "@/components/calendar-widget";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function TutorSchedulePage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "tutor") redirect("/login");
+diff --git a/src/app/dashboard/tutor/students/page.tsx b/src/app/dashboard/tutor/students/page.tsx
+index 5f452c4..09fdeef 100644
+--- a/src/app/dashboard/tutor/students/page.tsx
++++ b/src/app/dashboard/tutor/students/page.tsx
+@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
+ import { getStudentProgress } from "@/lib/progress";
+ import TutorStudentsClient from "./client";
+ 
++export const dynamic = "force-dynamic";
++
+ export default async function TutorStudentsPage() {
+   const session = await getServerSession(authOptions);
+   if (!session || session.user.role !== "tutor") redirect("/login");
+diff --git a/tsconfig.json b/tsconfig.json
+index 7b28589..501fd21 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -22,5 +22,5 @@
+     }
+   },
+   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+-  "exclude": ["node_modules"]
++  "exclude": ["node_modules", "prisma/seed.ts"]
+ }

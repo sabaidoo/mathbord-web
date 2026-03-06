@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { sendAdminConsultationAlert } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 // PUBLIC — no auth required; submitted from the marketing/landing page
 export async function POST(req: NextRequest) {
   let body: {

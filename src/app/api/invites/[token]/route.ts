@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 // PUBLIC — no auth required; used by the registration page to validate an invite token
 export async function GET(
   req: NextRequest,

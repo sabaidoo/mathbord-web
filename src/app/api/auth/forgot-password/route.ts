@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateResetToken } from "@/lib/password-reset";
 import { sendPasswordReset } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 // PUBLIC — no auth required

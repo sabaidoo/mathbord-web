@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { fmtMoney, fmtDate } from "@/lib/utils";
 import InvoicePayButton from "./pay-button";
 
+export const dynamic = "force-dynamic";
+
 export default async function ClientInvoicesPage({
   searchParams,
 }: {
