@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       email: String(email).toLowerCase().trim(),
       phone: phone ? String(phone) : null,
       province: province ? String(province) : null,
-      subjects: JSON.stringify(subjectsArray),
+      subjects: subjectsArray,
       gradeLevel: gradeLevel ? String(gradeLevel) : null,
       goals: goals ? String(goals) : null,
       marketingConsent: Boolean(marketingConsent),
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       email: consultation.email,
       phone: consultation.phone,
       province: consultation.province,
-      subjects: JSON.parse(consultation.subjects) as string[],
+      subjects: consultation.subjects as string[],
       gradeLevel: consultation.gradeLevel,
       goals: consultation.goals,
     });

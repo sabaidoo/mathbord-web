@@ -17,7 +17,7 @@ async function sendEmail(params: Parameters<Resend["emails"]["send"]>[0]) {
   await r.emails.send(params);
 }
 
-const FROM = process.env.FROM_EMAIL ?? "hello@mathbord.com";
+const FROM = process.env.FROM_EMAIL ?? "onboarding@resend.dev";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 // ---------------------------------------------------------------------------
